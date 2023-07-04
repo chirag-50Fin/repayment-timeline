@@ -71,56 +71,57 @@
         });
 
         function computeRepaymentTimeline(loanAmount, interestRate, startDate) {
-                let today = new Date(Date.UTC(startDate.year, startDate.month - 1, startDate.day));
-                let currentDay = today.getUTCDate();
-                let currentMonth = today.getUTCMonth() + 1;
-                let currentYear = today.getUTCFullYear();
-                let dailyInterestRate = interestRate / 365;
-                let firstPaymentMonth;
-                let firstPaymentYear;
-                if (currentDay <= 10) {
-                    firstPaymentMonth = currentMonth + 1;
-                    firstPaymentYear = currentYear;
+            let today = new Date(Date.UTC(startDate.year, startDate.month - 1, startDate.day));
+            let currentDay = today.getUTCDate();
+            let currentMonth = today.getUTCMonth() + 1;
+            let currentYear = today.getUTCFullYear();
+            let dailyInterestRate = interestRate / 365;
+            let firstPaymentMonth;
+            let firstPaymentYear;
+            if (currentDay <= 10) {
+                firstPaymentMonth = currentMonth + 1;
+                firstPaymentYear = currentYear;
+            } else {
+                firstPaymentMonth = currentMonth + 2;
+                firstPaymentYear = currentYear;
+            }
+            if (firstPaymentMonth > 12) {
+                firstPaymentMonth -= 12;
+                firstPaymentYear += 1;
+            }
+            let repayments = {};
+            for (let i = 0; i < 12; i++) {
+                let paymentDate = new Date(Date.UTC(firstPaymentYear, firstPaymentMonth - 1, 7));
+                console.log(i);
+                if (i < 11) {
+                    let interestEndDate, interestDays;
+                    if (i == 0) {
+                        interestEndDate = new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), 0));
+                        interestDays = Math.ceil((interestEndDate - today) / (1000 * 60 * 60 * 24)) + 1;
+                    } else {
+                        interestDays = Math.ceil((paymentDate - today) / (1000 * 60 * 60 * 24));
+                    }
+                    let interestAmount = loanAmount * dailyInterestRate * interestDays;
+                    let key = paymentDate.toISOString().split('T')[0];
+                    repayments[key] = Math.round(interestAmount * 1000) / 1000;
+                    today = new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), 1));
                 } else {
-                    firstPaymentMonth = currentMonth + 2;
-                    firstPaymentYear = currentYear;
+                    let finalPaymentDate = new Date(Date.UTC(startDate.year, startDate.month - 1, startDate.day));
+                    finalPaymentDate.setUTCFullYear(finalPaymentDate.getUTCFullYear() + 1);
+                    let loanAmount = parseFloat(document.getElementById('loanAmount').value);
+                    let finalMonthInterest = loanAmount * dailyInterestRate * Math.ceil((finalPaymentDate - today) / (1000 * 60 * 60 * 24));
+                    let key = finalPaymentDate.toISOString().split('T')[0];
+                    repayments[key] = Math.round((finalMonthInterest + loanAmount) * 1000) / 1000;
                 }
+                firstPaymentMonth += 1;
                 if (firstPaymentMonth > 12) {
                     firstPaymentMonth -= 12;
                     firstPaymentYear += 1;
                 }
-                let repayments = {};
-                for (let i = 0; i < 12; i++) {
-                    let paymentDate = new Date(Date.UTC(firstPaymentYear, firstPaymentMonth - 1, 7));
-                    if (i < 10) {
-                        let interestEndDate, interestDays;
-                        if (i == 0) {
-                            interestEndDate = new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), 0));
-                            interestDays = Math.ceil((interestEndDate - today) / (1000 * 60 * 60 * 24)) + 1;
-                        } else {
-                            interestDays = Math.ceil((paymentDate - today) / (1000 * 60 * 60 * 24));
-                        }
-                        let interestAmount = loanAmount * dailyInterestRate * interestDays;
-                        let key = paymentDate.toISOString().split('T')[0];  // Format the date as "YYYY-MM-DD"
-                        repayments[key] = Math.round(interestAmount * 1000) / 1000;
-                        today = new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), 1));
-                    } else if (i == 10) {
-                        today = new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), 1));
-                    } else {
-                        let finalPaymentDate = new Date(Date.UTC(startDate.year, startDate.month - 1, startDate.day));
-                        finalPaymentDate.setUTCFullYear(finalPaymentDate.getUTCFullYear() + 1);
-                        let finalMonthInterest = loanAmount * dailyInterestRate * Math.ceil((finalPaymentDate - today) / (1000 * 60 * 60 * 24));
-                        let key = finalPaymentDate.toISOString().split('T')[0]; // Format the date as "YYYY-MM-DD"
-                        repayments[key] = Math.round((finalMonthInterest + loanAmount) * 1000) / 1000;
-                    }
-                    firstPaymentMonth += 1;
-                    if (firstPaymentMonth > 12) {
-                        firstPaymentMonth -= 12;
-                        firstPaymentYear += 1;
-                    }
-                }
-                return repayments;
             }
+            return repayments;
+        }
+
 
         function populateTable(repayments) {
             let repaymentTable = document.getElementById('repaymentTable');
@@ -128,6 +129,7 @@
             repaymentTableBody.innerHTML = '';
             let index = 1;
             for (let date in repayments) {
+                console.log("Repayment", date, repayments[date]);
                 let row = document.createElement('tr');
                 let th = document.createElement('th');
                 th.scope = 'row';
