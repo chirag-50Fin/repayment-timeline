@@ -93,6 +93,12 @@
           populateTable(repayments);
         });
 
+      function formatDate(date) {
+        const options = { day: "numeric", month: "short", year: "numeric" };
+        return date.toLocaleDateString("en-US", options);
+      }
+
+      // loan repayment timeline
       function computeRepaymentTimeline(loanAmount, interestRate, startDate) {
         let today = new Date(
           Date.UTC(startDate.year, startDate.month - 1, startDate.day)
@@ -115,7 +121,6 @@
           firstPaymentYear += 1;
         }
         let repayments = {};
-        let totalInterestPaid = 0;
         let interestAmount = 0;
         for (let i = 0; i < 12; i++) {
           let paymentDate = new Date(
@@ -132,7 +137,7 @@
             let interestDays =
               Math.ceil((interestEndDate - today) / (1000 * 60 * 60 * 24)) + 1;
             interestAmount += loanAmount * dailyInterestRate * interestDays;
-            let key = paymentDate.toISOString().split("T")[0];
+            let key = formatDate(paymentDate);
             repayments[key] = Math.round(interestAmount * 100) / 100;
             today = new Date(
               Date.UTC(
@@ -157,13 +162,17 @@
                 Date.UTC(startDate.year + 1, startDate.month - 1, 19)
               );
             }
+            if (finalPaymentDate < today) {
+              finalPaymentDate = new Date(today);
+            }
             let interestDays =
               Math.ceil((finalPaymentDate - today) / (1000 * 60 * 60 * 24)) + 1;
             let finalMonthInterest =
               loanAmount * dailyInterestRate * interestDays;
-            let key = finalPaymentDate.toISOString().split("T")[0];
+            let key = formatDate(finalPaymentDate);
             repayments[key] =
-              Math.round((finalMonthInterest + loanAmount) * 100) / 100;
+              Math.round((finalMonthInterest + parseFloat(loanAmount)) * 100) /
+              100;
           }
           firstPaymentMonth += 1;
           if (firstPaymentMonth > 12) {
@@ -172,7 +181,6 @@
           }
         }
         let totalPayment = Object.values(repayments).reduce((a, b) => a + b, 0);
-        console.log(totalPayment);
         return repayments;
       }
 
