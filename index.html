@@ -1,155 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Loan Repayment Calculator</title>
 
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
 
     <style>
-        .container {
-            margin-top: 50px;
-        }
+      .container {
+        margin-top: 50px;
+      }
 
-        .result-table {
-            margin-top: 50px;
-        }
+      .result-table {
+        margin-top: 50px;
+      }
 
-        th,
-        td {
-            text-align: center;
-        }
+      th,
+      td {
+        text-align: center;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="container">
-        <h2>Loan Repayment Calculator</h2>
-        <form id="loanForm">
-            <div class="form-group">
-                <label for="startDate">Start Date:</label>
-                <input type="date" class="form-control" id="startDate" required>
-            </div>
-            <div class="form-group">
-                <label for="interestRate">Interest Rate:</label>
-                <input type="number" class="form-control" id="interestRate" min="0" step="0.01" required>
-            </div>
-            <div class="form-group">
-                <label for="loanAmount">Loan Amount:</label>
-                <input type="number" class="form-control" id="loanAmount" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Calculate</button>
-        </form>
-        <table class="table table-striped result-table" id="repaymentTable" style="display: none;">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Payment Date</th>
-                    <th scope="col">Payment Amount</th>
-                </tr>
-            </thead>
-            <tbody id="repaymentTableBody">
-            </tbody>
-        </table>
+      <h2>Loan Repayment Calculator</h2>
+      <form id="loanForm">
+        <div class="form-group">
+          <label for="startDate">Start Date:</label>
+          <input type="date" class="form-control" id="startDate" required />
+        </div>
+        <div class="form-group">
+          <label for="interestRate">Interest Rate:</label>
+          <input
+            type="number"
+            class="form-control"
+            id="interestRate"
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="loanAmount">Loan Amount:</label>
+          <input type="number" class="form-control" id="loanAmount" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Calculate</button>
+      </form>
+      <table
+        class="table table-striped result-table"
+        id="repaymentTable"
+        style="display: none"
+      >
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Payment Date</th>
+            <th scope="col">Payment Amount</th>
+          </tr>
+        </thead>
+        <tbody id="repaymentTableBody"></tbody>
+      </table>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
 
     <script>
-        document.getElementById('loanForm').addEventListener('submit', function (event) {
-            event.preventDefault();
-            let startDateStr = document.getElementById('startDate').value;
-            let interestRate = document.getElementById('interestRate').value / 100;
-            let loanAmount = document.getElementById('loanAmount').value;
-            let startDateParts = startDateStr.split('-');
-            let startDate = { year: parseInt(startDateParts[0]), month: parseInt(startDateParts[1]), day: parseInt(startDateParts[2]) };
-            let repayments = computeRepaymentTimeline(loanAmount, parseFloat(interestRate), startDate);
-            populateTable(repayments);
+      document
+        .getElementById("loanForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          let startDateStr = document.getElementById("startDate").value;
+          let interestRate =
+            document.getElementById("interestRate").value / 100;
+          let loanAmount = document.getElementById("loanAmount").value;
+          let startDateParts = startDateStr.split("-");
+          let startDate = {
+            year: parseInt(startDateParts[0]),
+            month: parseInt(startDateParts[1]),
+            day: parseInt(startDateParts[2]),
+          };
+          let repayments = computeRepaymentTimeline(
+            loanAmount,
+            parseFloat(interestRate),
+            startDate
+          );
+          populateTable(repayments);
         });
 
-        function computeRepaymentTimeline(loanAmount, interestRate, startDate) {
-            let today = new Date(Date.UTC(startDate.year, startDate.month - 1, startDate.day));
-            let currentDay = today.getUTCDate();
-            let currentMonth = today.getUTCMonth() + 1;
-            let currentYear = today.getUTCFullYear();
-            let dailyInterestRate = interestRate / 365;
-            let firstPaymentMonth;
-            let firstPaymentYear;
-            if (currentDay <= 10) {
-                firstPaymentMonth = currentMonth + 1;
-                firstPaymentYear = currentYear;
-            } else {
-                firstPaymentMonth = currentMonth + 2;
-                firstPaymentYear = currentYear;
-            }
-            if (firstPaymentMonth > 12) {
-                firstPaymentMonth -= 12;
-                firstPaymentYear += 1;
-            }
-            let repayments = {};
-            for (let i = 0; i < 12; i++) {
-                let paymentDate = new Date(Date.UTC(firstPaymentYear, firstPaymentMonth - 1, 7));
-                console.log(i);
-                if (i < 11) {
-                    let interestEndDate, interestDays;
-                    if (i == 0) {
-                        interestEndDate = new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), 0));
-                        interestDays = Math.ceil((interestEndDate - today) / (1000 * 60 * 60 * 24)) + 1;
-                    } else {
-                        interestDays = Math.ceil((paymentDate - today) / (1000 * 60 * 60 * 24));
-                    }
-                    let interestAmount = loanAmount * dailyInterestRate * interestDays;
-                    let key = paymentDate.toISOString().split('T')[0];
-                    repayments[key] = Math.round(interestAmount * 1000) / 1000;
-                    today = new Date(Date.UTC(paymentDate.getUTCFullYear(), paymentDate.getUTCMonth(), 1));
-                } else {
-                    let finalPaymentDate = new Date(Date.UTC(startDate.year, startDate.month - 1, startDate.day));
-                    finalPaymentDate.setUTCFullYear(finalPaymentDate.getUTCFullYear() + 1);
-                    let loanAmount = parseFloat(document.getElementById('loanAmount').value);
-                    let finalMonthInterest = loanAmount * dailyInterestRate * Math.ceil((finalPaymentDate - today) / (1000 * 60 * 60 * 24));
-                    let key = finalPaymentDate.toISOString().split('T')[0];
-                    repayments[key] = Math.round((finalMonthInterest + loanAmount) * 1000) / 1000;
-                }
-                firstPaymentMonth += 1;
-                if (firstPaymentMonth > 12) {
-                    firstPaymentMonth -= 12;
-                    firstPaymentYear += 1;
-                }
-            }
-            return repayments;
+      function computeRepaymentTimeline(loanAmount, interestRate, startDate) {
+        let today = new Date(
+          Date.UTC(startDate.year, startDate.month - 1, startDate.day)
+        );
+        let currentDay = today.getUTCDate();
+        let currentMonth = today.getUTCMonth() + 1;
+        let currentYear = today.getUTCFullYear();
+        let dailyInterestRate = interestRate / 365;
+        let firstPaymentMonth;
+        let firstPaymentYear;
+        if (currentDay <= 10) {
+          firstPaymentMonth = currentMonth + 1;
+          firstPaymentYear = currentYear;
+        } else {
+          firstPaymentMonth = currentMonth + 2;
+          firstPaymentYear = currentYear;
         }
-
-
-        function populateTable(repayments) {
-            let repaymentTable = document.getElementById('repaymentTable');
-            let repaymentTableBody = document.getElementById('repaymentTableBody');
-            repaymentTableBody.innerHTML = '';
-            let index = 1;
-            for (let date in repayments) {
-                console.log("Repayment", date, repayments[date]);
-                let row = document.createElement('tr');
-                let th = document.createElement('th');
-                th.scope = 'row';
-                th.innerText = index++;
-                row.appendChild(th);
-                let dateCell = document.createElement('td');
-                let formattedDate = new Date(date);
-                let day = formattedDate.getUTCDate();
-                let month = formattedDate.toLocaleString('default', { month: 'short' });
-                let year = formattedDate.getUTCFullYear();
-                dateCell.innerText = `${day} ${month}, ${year}`;
-                row.appendChild(dateCell);
-                let amountCell = document.createElement('td');
-                amountCell.innerText = repayments[date];
-                row.appendChild(amountCell);
-                repaymentTableBody.appendChild(row);
-            }
-            repaymentTable.style.display = 'table';
+        if (firstPaymentMonth > 12) {
+          firstPaymentMonth -= 12;
+          firstPaymentYear += 1;
         }
+        let repayments = {};
+        let totalInterestPaid = 0;
+        let interestAmount = 0;
+        for (let i = 0; i < 12; i++) {
+          let paymentDate = new Date(
+            Date.UTC(firstPaymentYear, firstPaymentMonth - 1, 7)
+          );
+          if (i < 11) {
+            let interestEndDate = new Date(
+              Date.UTC(
+                paymentDate.getUTCFullYear(),
+                paymentDate.getUTCMonth(),
+                0
+              )
+            );
+            let interestDays =
+              Math.ceil((interestEndDate - today) / (1000 * 60 * 60 * 24)) + 1;
+            interestAmount += loanAmount * dailyInterestRate * interestDays;
+            let key = paymentDate.toISOString().split("T")[0];
+            repayments[key] = Math.round(interestAmount * 100) / 100;
+            today = new Date(
+              Date.UTC(
+                paymentDate.getUTCFullYear(),
+                paymentDate.getUTCMonth(),
+                1
+              )
+            );
+            interestAmount = 0;
+          } else {
+            let finalPaymentDate = new Date(
+              Date.UTC(startDate.year, startDate.month - 1, startDate.day)
+            );
+            finalPaymentDate.setUTCFullYear(
+              finalPaymentDate.getUTCFullYear() + 1
+            );
+            if (
+              finalPaymentDate >
+              new Date(Date.UTC(startDate.year + 1, startDate.month - 1, 19))
+            ) {
+              finalPaymentDate = new Date(
+                Date.UTC(startDate.year + 1, startDate.month - 1, 19)
+              );
+            }
+            let interestDays =
+              Math.ceil((finalPaymentDate - today) / (1000 * 60 * 60 * 24)) + 1;
+            let finalMonthInterest =
+              loanAmount * dailyInterestRate * interestDays;
+            let key = finalPaymentDate.toISOString().split("T")[0];
+            repayments[key] =
+              Math.round((finalMonthInterest + loanAmount) * 100) / 100;
+          }
+          firstPaymentMonth += 1;
+          if (firstPaymentMonth > 12) {
+            firstPaymentMonth -= 12;
+            firstPaymentYear += 1;
+          }
+        }
+        let totalPayment = Object.values(repayments).reduce((a, b) => a + b, 0);
+        console.log(totalPayment);
+        return repayments;
+      }
+
+      function populateTable(repayments) {
+        let repaymentTable = document.getElementById("repaymentTable");
+        let repaymentTableBody = document.getElementById("repaymentTableBody");
+        repaymentTableBody.innerHTML = "";
+        let index = 1;
+        for (let date in repayments) {
+          console.log("Repayment", date, repayments[date]);
+          let row = document.createElement("tr");
+          let th = document.createElement("th");
+          th.scope = "row";
+          th.innerText = index++;
+          row.appendChild(th);
+          let dateCell = document.createElement("td");
+          let formattedDate = new Date(date);
+          let day = formattedDate.getUTCDate();
+          let month = formattedDate.toLocaleString("default", {
+            month: "short",
+          });
+          let year = formattedDate.getUTCFullYear();
+          dateCell.innerText = `${day} ${month}, ${year}`;
+          row.appendChild(dateCell);
+          let amountCell = document.createElement("td");
+          amountCell.innerText = repayments[date];
+          row.appendChild(amountCell);
+          repaymentTableBody.appendChild(row);
+        }
+        repaymentTable.style.display = "table";
+      }
     </script>
-</body>
-
+  </body>
 </html>
