@@ -154,14 +154,6 @@
             finalPaymentDate.setUTCFullYear(
               finalPaymentDate.getUTCFullYear() + 1
             );
-            if (
-              finalPaymentDate >
-              new Date(Date.UTC(startDate.year + 1, startDate.month - 1, 19))
-            ) {
-              finalPaymentDate = new Date(
-                Date.UTC(startDate.year + 1, startDate.month - 1, 19)
-              );
-            }
             if (finalPaymentDate < today) {
               finalPaymentDate = new Date(today);
             }
@@ -190,11 +182,11 @@
         repaymentTableBody.innerHTML = "";
         let index = 1;
         for (let date in repayments) {
-          console.log("Repayment", date, repayments[date]);
           let row = document.createElement("tr");
           let th = document.createElement("th");
           th.scope = "row";
           th.innerText = index++;
+          console.log("row", row);
           row.appendChild(th);
           let dateCell = document.createElement("td");
           let formattedDate = new Date(date);
@@ -203,7 +195,7 @@
             month: "short",
           });
           let year = formattedDate.getUTCFullYear();
-          dateCell.innerText = `${day} ${month}, ${year}`;
+          dateCell.innerText = `${day + 1} ${month}, ${year}`;
           row.appendChild(dateCell);
           let amountCell = document.createElement("td");
           amountCell.innerText = repayments[date];
